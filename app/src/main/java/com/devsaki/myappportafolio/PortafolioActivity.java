@@ -27,14 +27,7 @@ public class PortafolioActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         toast = Toast.makeText(this, R.string.btn_project_1, Toast.LENGTH_SHORT);
-        try {
-            Properties prop = new Properties();
-            prop.load(getBaseContext().getAssets().open("app.properties"));
-            String apiKey = prop.getProperty("themoviedb.api.key");
-            Log.d(PortafolioActivity.class.getCanonicalName(), apiKey);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 
     @Override
