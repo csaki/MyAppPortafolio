@@ -38,3 +38,6 @@ Thumbs.db
 # User-specific configurations
 .idea/
 *.iml
+
+# Ignore API_KEYS
+/*/strings_keys.xml
