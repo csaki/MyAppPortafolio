@@ -40,4 +40,4 @@ Thumbs.db
 *.iml
 
 # Ignore API_KEYS
-/*/strings_keys.xml
+/app/src/main/res/values/strings_keys.xml
