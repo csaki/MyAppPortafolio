@@ -4,7 +4,6 @@
     <string name="action_settings">Settings</string>
 
 
-
     <!-- content_portafolio -->
     <string name="title_content_portafolio">My Nanodegree Apps!</string>
     <string name="btn_project_1">SPOTIFY STREAMER</string>
@@ -13,5 +12,6 @@
     <string name="btn_project_4">BUILD IT BIGGER</string>
     <string name="btn_project_5">XYZ READER</string>
     <string name="btn_project_6">CAPSTONE: MY OWN APP</string>
+    <string name="title_activity_popular_movie">PopularMovieActivity</string>
 
 </resources>
