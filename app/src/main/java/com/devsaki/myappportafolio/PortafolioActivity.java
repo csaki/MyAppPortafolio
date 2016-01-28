@@ -2,18 +2,12 @@ package com.devsaki.myappportafolio;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
-
-import java.io.IOException;
-import java.util.Properties;
 
 public class PortafolioActivity extends AppCompatActivity {
 
@@ -56,7 +50,7 @@ public class PortafolioActivity extends AppCompatActivity {
         toast.setText(R.string.btn_project_1);
         toast.show();
 
-        Intent popularMovie = new Intent(this, PopularMovieActivity.class);
+        Intent popularMovie = new Intent(this, MovieListActivity.class);
         startActivity(popularMovie);
     }
 

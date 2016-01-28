@@ -14,4 +14,14 @@
     <string name="btn_project_6">CAPSTONE: MY OWN APP</string>
     <string name="title_activity_popular_movie">PopularMovieActivity</string>
 
+
+    <!-- Movies -->
+    <string name="most_popular">Most Popular</string>
+    <string name="highest_rating">Highest Rating</string>
+    <string name="movie_title_dummy">Movie Title dummy</string>
+    <string name="title_movie_list">Movies</string>
+    <string name="title_movie_detail">Movie Detail</string>
+    <string name="title_item_list">Items</string>
+    <string name="title_item_detail">Item Detail</string>
+    <string name="mark_as_favorite">MARK AS FAVORITE</string>
 </resources>
