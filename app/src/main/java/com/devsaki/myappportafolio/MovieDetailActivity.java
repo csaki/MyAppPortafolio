@@ -81,7 +81,10 @@ public class MovieDetailActivity extends AppCompatActivity {
         if (id == android.R.id.home) {
             this.finish();
             return true;
+        } else {
+            if (fragment != null)
+                fragment.onOptionsItemSelected(item);
+            return true;
         }
-        return super.onOptionsItemSelected(item);
     }
 }

@@ -34,4 +34,5 @@
     <!-- SyncAdapter related -->
     <string name="sync_account_type">movie.devsaki.com</string>
     <string name="content_authority">com.devsaki.myappportafolio</string>
+    <string name="share">Share Trailer</string>
 </resources>

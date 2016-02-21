@@ -12,6 +12,9 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -86,6 +89,7 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
         if (container == null) {
             return rootView;
         }
+        setHasOptionsMenu(true);
 
         tvMovieTitle = (TextView) rootView.findViewById(R.id.tvMovieTitle);
         tvMovieOverview = (TextView) rootView.findViewById(R.id.tvMovieOverview);
@@ -170,6 +174,31 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     public void onSaveInstanceState(Bundle outState) {
         outState.putParcelable(ARG_ITEM, movieSelected);
         outState.putInt(ARG_ITEM_ID, id);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        MenuItem item =
+                menu.add(Menu.NONE, R.id.btnMarkAsFavorite, 10, R.string.share);
+        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        item.setIcon(android.R.drawable.ic_menu_share);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId()==R.id.btnMarkAsFavorite){
+            if(movieSelected!=null&&movieSelected.getVideos().size()>0){
+                Video video = movieSelected.getVideos().get(0);
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_SUBJECT, movieSelected.getOriginalTitle() + " : " + video.getName());
+                sendIntent.putExtra(Intent.EXTRA_TEXT, "http://www.youtube.com/watch?v=" + video.getKey());
+                sendIntent.setType("text/plain");
+                startActivity(sendIntent);
+            }
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

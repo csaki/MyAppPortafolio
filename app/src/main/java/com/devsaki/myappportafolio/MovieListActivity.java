@@ -99,24 +99,23 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
             // If this view is present, then the
             // activity should be in two-pane mode.
             mTwoPane = true;
-            widthSize = widthSize/2;
+            widthSize = widthSize / 2;
         }
 
-        if(imageWidth>=widthSize){
+        if (imageWidth >= widthSize) {
             imageWidth = widthSize;
         } else {
-            spanCount = widthSize/imageWidth;
-            int rest = widthSize%imageWidth;
-            imageWidth = imageWidth + rest/spanCount;
+            spanCount = widthSize / imageWidth;
+            int rest = widthSize % imageWidth;
+            imageWidth = imageWidth + rest / spanCount;
         }
 
-        imageHeight = imageWidth*277/185;
+        imageHeight = imageWidth * 277 / 185;
 
-        qtyMoviesByPage = heightSize/imageHeight*widthSize/imageWidth;
+        qtyMoviesByPage = heightSize / imageHeight * widthSize / imageWidth;
 
         final GridLayoutManager gridLayout = new GridLayoutManager(this, spanCount);
         movieList.setLayoutManager(gridLayout);
-
 
 
         movieList.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -143,7 +142,7 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
 
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        if(savedInstanceState==null){
+        if (savedInstanceState == null) {
             currentPage = 1;
             currentSort = preferences.getInt(ConstantPreferences.MOVIE_SORT, ConstantPreferences.MOVIE_SORT_POPULAR);
             movies = new ArrayList<>();
@@ -154,13 +153,13 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
         } else {
             currentPage = savedInstanceState.getInt("current_page");
             currentSort = savedInstanceState.getInt("current_sort");
-            setTitle(getResources().getString(currentSort==ConstantPreferences.MOVIE_SORT_POPULAR?R.string.most_popular:R.string.highest_rating));
+            setTitle(getResources().getString(currentSort == ConstantPreferences.MOVIE_SORT_POPULAR ? R.string.most_popular : R.string.highest_rating));
 
             movies = savedInstanceState.getParcelableArrayList("movies");
             movieItemRecyclerViewAdapter = new MovieItemRecyclerViewAdapter(movies);
             movieList.setAdapter(movieItemRecyclerViewAdapter);
 
-            if(mTwoPane&&savedInstanceState.containsKey(MovieDetailFragment.ARG_ITEM_ID)){
+            if (mTwoPane && savedInstanceState.containsKey(MovieDetailFragment.ARG_ITEM_ID)) {
                 fragment = new MovieDetailFragment();
                 fragment.setArguments(savedInstanceState);
                 fragment.setRetainInstance(false);
@@ -169,7 +168,7 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
                         .commit();
             }
 
-            if(movies.size()<qtyMoviesByPage){
+            if (movies.size() < qtyMoviesByPage) {
                 syncImmediately(true);
                 getLoaderManager().initLoader(MOVIES, null, this);
             }
@@ -181,7 +180,7 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
         outState.putInt("current_page", currentPage);
         outState.putInt("current_sort", currentSort);
         outState.putParcelableArrayList("movies", movies);
-        if(fragment!=null){
+        if (fragment != null) {
             fragment.onSaveInstanceState(outState);
         }
 
@@ -203,20 +202,24 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
         int id = item.getItemId();
         //noinspection SimplifiableIfStatement
         if (id == R.id.most_popular) {
-            if(currentSort==ConstantPreferences.MOVIE_SORT_POPULAR){
+            if (currentSort == ConstantPreferences.MOVIE_SORT_POPULAR) {
                 return true;
             }
             currentSort = ConstantPreferences.MOVIE_SORT_POPULAR;
         } else if (id == R.id.highest_rated) {
-            if(currentSort==ConstantPreferences.MOVIE_SORT_RATING){
+            if (currentSort == ConstantPreferences.MOVIE_SORT_RATING) {
                 return true;
             }
             currentSort = ConstantPreferences.MOVIE_SORT_RATING;
-        } else {
-            if(currentSort==ConstantPreferences.MOVIE_SORT_MY_FAVORITES){
+        } else if (id == R.id.my_favorites) {
+            if (currentSort == ConstantPreferences.MOVIE_SORT_MY_FAVORITES) {
                 return true;
             }
             currentSort = ConstantPreferences.MOVIE_SORT_MY_FAVORITES;
+        } else {
+            if (fragment != null)
+                fragment.onOptionsItemSelected(item);
+            return true;
         }
         preferences.edit().putInt(ConstantPreferences.MOVIE_SORT, currentSort).apply();
 
@@ -232,7 +235,7 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
 
     private void syncImmediately(boolean calculateQtyPages) {
         MovieRestHelper.setMovies(null);
-        int calculatedPages = calculateQtyPages?(int) Math.ceil((qtyMoviesByPage - movies.size()) / 20.0):1;
+        int calculatedPages = calculateQtyPages ? (int) Math.ceil((qtyMoviesByPage - movies.size()) / 20.0) : 1;
         MovieSyncAdapter.syncImmediately(this, currentSort, calculatedPages, currentPage, 0);
         loading = true;
     }
@@ -241,8 +244,8 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent data) {
         if (requestCode == 0) {
-            if(mTwoPane){
-                if(fragment==null){
+            if (mTwoPane) {
+                if (fragment == null) {
                     fragment = new MovieDetailFragment();
                     fragment.setRetainInstance(false);
                     fragment.setArguments(data.getExtras());
@@ -261,9 +264,9 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
         switch (id) {
             case MOVIES:
                 pb.setVisibility(View.VISIBLE);
-                if(currentSort==ConstantPreferences.MOVIE_SORT_MY_FAVORITES){
+                if (currentSort == ConstantPreferences.MOVIE_SORT_MY_FAVORITES) {
                     uri = MovieContract.MovieEntry.CONTENT_URI_DB_FAVORITE;
-                }else{
+                } else {
                     uri = MovieContract.MovieEntry.CONTENT_URI_REST;
                 }
 
@@ -276,12 +279,12 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
 
         int id = loader.getId();
         pb.setVisibility(View.INVISIBLE);
-        setTitle(getResources().getString(currentSort == ConstantPreferences.MOVIE_SORT_POPULAR ? R.string.most_popular : R.string.highest_rating));
+        setTitle(getResources().getString(currentSort == ConstantPreferences.MOVIE_SORT_POPULAR ? R.string.most_popular : currentSort == ConstantPreferences.MOVIE_SORT_RATING ? R.string.highest_rating : R.string.my_favorites));
         if (data.getCount() == 0) {
             return;
         }
         Log.d(LOG_TAG, "page : " + currentPage);
-        currentPage+=(int)Math.ceil(data.getCount()/20.0);
+        currentPage += (int) Math.ceil(data.getCount() / 20.0);
         loading = false;
         switch (id) {
             case MOVIES:
@@ -325,7 +328,7 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
                 @Override
                 public void onClick(View v) {
                     if (mTwoPane) {
-                        if(fragment==null){
+                        if (fragment == null) {
                             Bundle arguments = new Bundle();
                             arguments.putInt(MovieDetailFragment.ARG_ITEM_ID, movie.getId());
                             arguments.putParcelable(MovieDetailFragment.ARG_ITEM, null);
@@ -346,9 +349,6 @@ public class MovieListActivity extends AppCompatActivity implements LoaderManage
                 }
             });
         }
-
-
-
 
 
         @Override
