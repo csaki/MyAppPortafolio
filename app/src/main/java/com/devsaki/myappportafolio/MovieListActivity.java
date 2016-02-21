@@ -1,12 +1,13 @@
 package com.devsaki.myappportafolio;
 
-import android.content.Context;
+import android.app.LoaderManager;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -24,19 +25,12 @@ import android.widget.ProgressBar;
 
 
 import com.bumptech.glide.Glide;
+import com.devsaki.myappportafolio.data.MovieContract;
+import com.devsaki.myappportafolio.data.MovieRestHelper;
 import com.devsaki.myappportafolio.domain.Movie;
+import com.devsaki.myappportafolio.sync.MovieSyncAdapter;
 import com.devsaki.myappportafolio.util.ConstantPreferences;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Array;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,9 +42,10 @@ import java.util.List;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class MovieListActivity extends AppCompatActivity {
+public class MovieListActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    public final String LOG_TAG = MovieListActivity.class.getSimpleName();
+    public static final String LOG_TAG = MovieListActivity.class.getSimpleName();
+    private static final int MOVIES = 0;
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
@@ -76,6 +71,10 @@ public class MovieListActivity extends AppCompatActivity {
 
     private MovieDetailFragment fragment;
 
+    private int qtyMoviesByPage;
+
+    private ProgressBar pb;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,8 +83,7 @@ public class MovieListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         movieList = (RecyclerView) findViewById(R.id.movie_list);
-
-
+        pb = (ProgressBar) findViewById(R.id.pbLoadingList);
 
         imageWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 148,
                 this.getResources().getDisplayMetrics());
@@ -94,8 +92,6 @@ public class MovieListActivity extends AppCompatActivity {
 
         int widthSize = getResources().getDisplayMetrics().widthPixels;
         int heightSize = getResources().getDisplayMetrics().heightPixels;
-
-        int qtyMoviesByPage = 20;
 
         if (findViewById(R.id.movie_detail_container) != null) {
             // The detail container view will be present only in the
@@ -138,7 +134,7 @@ public class MovieListActivity extends AppCompatActivity {
                         int pastVisiblesItems = gridLayout.findFirstVisibleItemPosition();
                         if ((visibleItemCount + pastVisiblesItems) >= totalItemCount) {
                             Log.i(LOG_TAG, "list end");
-                            new MoviesListAsyncTask().execute();
+                            syncImmediately(false);
                         }
                     }
                 }
@@ -153,7 +149,8 @@ public class MovieListActivity extends AppCompatActivity {
             movies = new ArrayList<>();
             movieItemRecyclerViewAdapter = new MovieItemRecyclerViewAdapter(movies);
             movieList.setAdapter(movieItemRecyclerViewAdapter);
-            new MoviesListAsyncTask().execute((int)Math.ceil(qtyMoviesByPage/20.0));
+            syncImmediately(true);
+            getLoaderManager().initLoader(MOVIES, null, this);
         } else {
             currentPage = savedInstanceState.getInt("current_page");
             currentSort = savedInstanceState.getInt("current_sort");
@@ -166,13 +163,15 @@ public class MovieListActivity extends AppCompatActivity {
             if(mTwoPane&&savedInstanceState.containsKey(MovieDetailFragment.ARG_ITEM_ID)){
                 fragment = new MovieDetailFragment();
                 fragment.setArguments(savedInstanceState);
+                fragment.setRetainInstance(false);
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.movie_detail_container, fragment)
                         .commit();
             }
 
             if(movies.size()<qtyMoviesByPage){
-                new MoviesListAsyncTask().execute((int)Math.ceil((qtyMoviesByPage-movies.size())/20.0));
+                syncImmediately(true);
+                getLoaderManager().initLoader(MOVIES, null, this);
             }
         }
     }
@@ -185,7 +184,6 @@ public class MovieListActivity extends AppCompatActivity {
         if(fragment!=null){
             fragment.onSaveInstanceState(outState);
         }
-
 
         super.onSaveInstanceState(outState);
     }
@@ -203,29 +201,40 @@ public class MovieListActivity extends AppCompatActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-
-
         //noinspection SimplifiableIfStatement
         if (id == R.id.most_popular) {
             if(currentSort==ConstantPreferences.MOVIE_SORT_POPULAR){
                 return true;
             }
             currentSort = ConstantPreferences.MOVIE_SORT_POPULAR;
-        } else {
+        } else if (id == R.id.highest_rated) {
             if(currentSort==ConstantPreferences.MOVIE_SORT_RATING){
                 return true;
             }
             currentSort = ConstantPreferences.MOVIE_SORT_RATING;
+        } else {
+            if(currentSort==ConstantPreferences.MOVIE_SORT_MY_FAVORITES){
+                return true;
+            }
+            currentSort = ConstantPreferences.MOVIE_SORT_MY_FAVORITES;
         }
         preferences.edit().putInt(ConstantPreferences.MOVIE_SORT, currentSort).apply();
 
         movies.clear();
+        movieItemRecyclerViewAdapter.notifyDataSetChanged();
+
         currentPage = 1;
 
-        new MoviesListAsyncTask().execute();
-
+        syncImmediately(true);
+        getLoaderManager().restartLoader(MOVIES, null, this);
         return true;
+    }
+
+    private void syncImmediately(boolean calculateQtyPages) {
+        MovieRestHelper.setMovies(null);
+        int calculatedPages = calculateQtyPages?(int) Math.ceil((qtyMoviesByPage - movies.size()) / 20.0):1;
+        MovieSyncAdapter.syncImmediately(this, currentSort, calculatedPages, currentPage, 0);
+        loading = true;
     }
 
     @Override
@@ -235,6 +244,7 @@ public class MovieListActivity extends AppCompatActivity {
             if(mTwoPane){
                 if(fragment==null){
                     fragment = new MovieDetailFragment();
+                    fragment.setRetainInstance(false);
                     fragment.setArguments(data.getExtras());
                     getSupportFragmentManager().beginTransaction()
                             .replace(R.id.movie_detail_container, fragment)
@@ -242,6 +252,49 @@ public class MovieListActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Uri uri = null;
+        String[] projection = MovieContract.MovieEntry.PROJECTION;
+        switch (id) {
+            case MOVIES:
+                pb.setVisibility(View.VISIBLE);
+                if(currentSort==ConstantPreferences.MOVIE_SORT_MY_FAVORITES){
+                    uri = MovieContract.MovieEntry.CONTENT_URI_DB_FAVORITE;
+                }else{
+                    uri = MovieContract.MovieEntry.CONTENT_URI_REST;
+                }
+
+        }
+        return new CursorLoader(this, uri, projection, null, null, null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+        int id = loader.getId();
+        pb.setVisibility(View.INVISIBLE);
+        setTitle(getResources().getString(currentSort == ConstantPreferences.MOVIE_SORT_POPULAR ? R.string.most_popular : R.string.highest_rating));
+        if (data.getCount() == 0) {
+            return;
+        }
+        Log.d(LOG_TAG, "page : " + currentPage);
+        currentPage+=(int)Math.ceil(data.getCount()/20.0);
+        loading = false;
+        switch (id) {
+            case MOVIES:
+                ArrayList<Movie> movies = MovieRestHelper.moviesFromCursor(data);
+                this.movies.addAll(movies);
+                movieItemRecyclerViewAdapter.notifyDataSetChanged();
+        }
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
     }
 
     public class MovieItemRecyclerViewAdapter
@@ -278,12 +331,12 @@ public class MovieListActivity extends AppCompatActivity {
                             arguments.putParcelable(MovieDetailFragment.ARG_ITEM, null);
                             fragment = new MovieDetailFragment();
                             fragment.setArguments(arguments);
+                            fragment.setRetainInstance(false);
                             getSupportFragmentManager().beginTransaction()
                                     .replace(R.id.movie_detail_container, fragment)
                                     .commit();
                         } else {
-                            fragment.refresh(movie.getId(), null);
-
+                            fragment.refresh(movie.getId());
                         }
                     } else {
                         Intent intent = new Intent(MovieListActivity.this, MovieDetailActivity.class);
@@ -312,106 +365,6 @@ public class MovieListActivity extends AppCompatActivity {
                 mView = view;
                 ivMovie = (ImageView) view.findViewById(R.id.ivMovie);
             }
-        }
-    }
-
-    public class MoviesListAsyncTask extends AsyncTask<Integer, Integer, List<Movie>> {
-
-        @Override
-        protected void onPreExecute() {
-            loading = true;
-            ProgressBar pb = (ProgressBar) findViewById(R.id.pbLoadingList);
-            pb.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected List<Movie> doInBackground(Integer... params) {
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-
-            int qtyPages = 1;
-            if(params.length > 0 && params[0]>1){
-                qtyPages = params[0];
-            }
-
-            try {
-                List<Movie> result = new ArrayList<>();
-                for(int i = 0; i < qtyPages; i++){
-                    String themoviedbapiUrl = "http://api.themoviedb.org/3/movie/" + (currentSort==ConstantPreferences.MOVIE_SORT_RATING? "top_rated" : "popular") + "?";
-
-                    Uri builtUri = Uri.parse(themoviedbapiUrl).buildUpon()
-                            .appendQueryParameter("api_key", getResources().getString(R.string.themoviedb_api_key))
-                            .appendQueryParameter("page", String.valueOf(currentPage)).build();
-
-                    URL url = new URL(builtUri.toString());
-                    urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setRequestMethod("GET");
-                    urlConnection.connect();
-
-                    // Read the input stream into a String
-                    InputStream inputStream = urlConnection.getInputStream();
-                    StringBuffer buffer = new StringBuffer();
-                    if (inputStream == null) {
-                        // Nothing to do.
-                        return null;
-                    }
-                    reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        buffer.append(line + "\n");
-                    }
-
-                    if (buffer.length() == 0) {
-                        // Stream was empty.  No point in parsing.
-                        return null;
-                    }
-                    String json = buffer.toString();
-                    JSONObject jsonObject = new JSONObject(json);
-                    JSONArray movies = jsonObject.getJSONArray("results");
-                    for(int j = 0; j < movies.length(); j++){
-                        JSONObject jsonMovie = movies.getJSONObject(j);
-                        Movie movie = new Movie();
-                        movie.setId(jsonMovie.getInt("id"));
-                        movie.setPosterPath(jsonMovie.getString("poster_path"));
-                        result.add(movie);
-                    }
-                }
-
-                return result;
-            } catch (Exception e){
-                Log.e(LOG_TAG, "Error ", e);
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(LOG_TAG, "Error closing stream", e);
-                    }
-                }
-            }
-
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(List<Movie> list) {
-            loading = false;
-            if(list!=null){
-                currentPage++;
-                for(Movie movie : list){
-                    movies.add(movie);
-                }
-                movieItemRecyclerViewAdapter.notifyDataSetChanged();
-            }
-            setTitle(getResources().getString(currentSort==ConstantPreferences.MOVIE_SORT_POPULAR?R.string.most_popular:R.string.highest_rating));
-
-            ProgressBar pb = (ProgressBar) findViewById(R.id.pbLoadingList);
-            pb.setVisibility(View.GONE);
         }
     }
 }

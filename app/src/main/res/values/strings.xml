@@ -3,6 +3,8 @@
 
     <string name="action_settings">Settings</string>
 
+    <string name="dummy">Dummy Text</string>
+
 
     <!-- content_portafolio -->
     <string name="title_content_portafolio">My Nanodegree Apps!</string>
@@ -18,10 +20,18 @@
     <!-- Movies -->
     <string name="most_popular">Most Popular</string>
     <string name="highest_rating">Highest Rating</string>
+    <string name="my_favorites">My Favorites</string>
     <string name="movie_title_dummy">Movie Title dummy</string>
     <string name="title_movie_list">Movies</string>
     <string name="title_movie_detail">Movie Detail</string>
     <string name="title_item_list">Items</string>
     <string name="title_item_detail">Item Detail</string>
     <string name="mark_as_favorite">MARK AS FAVORITE</string>
+    <string name="unmark_as_favorite">UNMARK AS FAVORITE</string>
+    <string name="load_more">Load more</string>
+
+
+    <!-- SyncAdapter related -->
+    <string name="sync_account_type">movie.devsaki.com</string>
+    <string name="content_authority">com.devsaki.myappportafolio</string>
 </resources>

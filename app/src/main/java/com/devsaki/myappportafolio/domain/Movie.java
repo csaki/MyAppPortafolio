@@ -3,6 +3,7 @@ package com.devsaki.myappportafolio.domain;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -17,6 +18,10 @@ public class Movie implements Parcelable{
     String originalTitle;
     double voteAverage;
     int runtime;
+    ArrayList<Video> videos;
+    ArrayList<Review> reviews;
+    long dateUpdate;
+    boolean favorite;
 
     public Movie() {
     }
@@ -29,6 +34,10 @@ public class Movie implements Parcelable{
         this.id = in.readInt();
         this.runtime = in.readInt();
         this.voteAverage = in.readDouble();
+        this.videos = in.readArrayList(Movie.class.getClassLoader());
+        this.reviews = in.readArrayList(Review.class.getClassLoader());
+        dateUpdate = in.readLong();
+        favorite = in.readInt()==1;
     }
 
     @Override
@@ -40,6 +49,10 @@ public class Movie implements Parcelable{
         dest.writeInt(id);
         dest.writeInt(runtime);
         dest.writeDouble(voteAverage);
+        dest.writeList(videos);
+        dest.writeList(reviews);
+        dest.writeLong(dateUpdate);
+        dest.writeInt(favorite?1:0);
     }
 
     public static final Parcelable.Creator<Movie> CREATOR
@@ -113,5 +126,37 @@ public class Movie implements Parcelable{
 
     public void setRuntime(int runtime) {
         this.runtime = runtime;
+    }
+
+    public ArrayList<Video> getVideos() {
+        return videos;
+    }
+
+    public void setVideos(ArrayList<Video> videos) {
+        this.videos = videos;
+    }
+
+    public ArrayList<Review> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(ArrayList<Review> reviews) {
+        this.reviews = reviews;
+    }
+
+    public long getDateUpdate() {
+        return dateUpdate;
+    }
+
+    public void setDateUpdate(long dateUpdate) {
+        this.dateUpdate = dateUpdate;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
     }
 }
