@@ -54,19 +54,15 @@ public class MovieDetailActivity extends AppCompatActivity {
         //
         // http://developer.android.com/guide/components/fragments.html
         //
-        if (savedInstanceState == null) {
-            // Create the detail fragment and add it to the activity
-            // using a fragment transaction.
-            Bundle arguments = new Bundle();
-            arguments.putInt(MovieDetailFragment.ARG_ITEM_ID,
-                    getIntent().getIntExtra(MovieDetailFragment.ARG_ITEM_ID, -1));
-            fragment = new MovieDetailFragment();
-            fragment.setArguments(arguments);
-            fragment.setRetainInstance(false);
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.movie_detail_container, fragment)
-                    .commit();
-        }
+        Bundle arguments = new Bundle();
+        arguments.putInt(MovieDetailFragment.ARG_ITEM_ID,
+                getIntent().getIntExtra(MovieDetailFragment.ARG_ITEM_ID, -1));
+        fragment = new MovieDetailFragment();
+        fragment.setArguments(arguments);
+        fragment.setRetainInstance(false);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.movie_detail_container, fragment)
+                .commit();
     }
 
     @Override

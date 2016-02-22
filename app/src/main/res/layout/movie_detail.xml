@@ -86,6 +86,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
+                        android:drawableLeft="@android:drawable/ic_input_add"
                         android:padding="10dp"
                         android:text="@string/mark_as_favorite" />
                 </LinearLayout>

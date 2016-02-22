@@ -225,8 +225,10 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
         tvMovieRuntime.setText(String.valueOf(movie.getRuntime()));
         tvMovieVoteAverage.setText(movie.getVoteAverage() + "/10");
         if(movie.isFavorite()){
+            btnMarkAsFavorite.setCompoundDrawablesWithIntrinsicBounds(getContext().getDrawable(android.R.drawable.ic_input_delete), null, null, null);
             btnMarkAsFavorite.setText(R.string.unmark_as_favorite);
         }else{
+            btnMarkAsFavorite.setCompoundDrawablesWithIntrinsicBounds(getContext().getDrawable(android.R.drawable.ic_input_add),null,null,null);
             btnMarkAsFavorite.setText(R.string.mark_as_favorite);
         }
 

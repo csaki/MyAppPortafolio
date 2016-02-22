@@ -84,7 +84,7 @@ public class MovieContract {
 
         public static final String[] PROJECTION = new String[]{
                 _ID, COLUMN_MOVIE_ID, COLUMN_NAME,
-                COLUMN_KEY, COLUMN_SITE, COLUMN_TYPE
+                COLUMN_SITE, COLUMN_KEY, COLUMN_TYPE
         };
 
         public static final int INDEX_ID = 0;

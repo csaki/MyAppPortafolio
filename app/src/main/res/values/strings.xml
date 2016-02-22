@@ -26,8 +26,8 @@
     <string name="title_movie_detail">Movie Detail</string>
     <string name="title_item_list">Items</string>
     <string name="title_item_detail">Item Detail</string>
-    <string name="mark_as_favorite">MARK AS FAVORITE</string>
-    <string name="unmark_as_favorite">UNMARK AS FAVORITE</string>
+    <string name="mark_as_favorite">Mark as Favorite</string>
+    <string name="unmark_as_favorite">Unmark as Favorite</string>
     <string name="load_more">Load more</string>
 
 
